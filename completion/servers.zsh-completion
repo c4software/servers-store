@@ -1,0 +1,65 @@
+#compdef servers
+#autoload
+
+_servers () {
+	local cmd
+	if (( CURRENT > 2)); then
+		cmd=${words[2]}
+		curcontext="${curcontext%:*:*}:servers-$cmd"
+		(( CURRENT-- ))
+		shift words
+		# Run the completion for the subcommand
+		case "${cmd}" in
+			ls|list|edit)
+				_servers_complete_entries_with_subdirs
+				;;
+			insert)
+				_servers_complete_entries_with_subdirs
+				;;
+			rm)
+				_arguments : \
+					"-f[force deletion]" \
+					"--force[force deletion]" \
+					"-r[recursively delete]" \
+					"--recursive[recursively delete]"
+					_servers_complete_entries_with_subdirs
+				;;
+			show|*)
+				_servers_cmd_show
+				;;
+		esac
+	else
+		local -a subcommands
+		subcommands=(
+			"ls:List servers"
+			"find:Find severs files or directories based on pattern"
+			"connect:Connect or transfert file to server"
+			"insert:Insert a new server"
+			"edit:Edit a server with \$EDITOR"
+			"rm:Remove the server"
+		)
+		_describe -t commands 'servers' subcommands
+		
+		_servers_cmd_show
+	fi
+}
+
+_servers_cmd_show () {
+	_servers_complete_entries
+}
+_servers_complete_entries_helper () {
+	local IFS=$'\n'
+	local prefix
+	zstyle -s ":completion:${curcontext}:" prefix prefix || prefix="$HOME/.server-store"
+	_values -C 'Server' ${$(find -L "$prefix" \( -name .git -o -name .gpg-id \) -prune -o $@ -print 2>/dev/null | sed -e "s#${prefix}/\{0,1\}##" -e 's#\.sh##' -e 's#\\#\\\\#' | sort):-""}
+}
+
+_servers_complete_entries_with_subdirs () {
+	_servers_complete_entries_helper
+}
+
+_servers_complete_entries () {
+	_servers_complete_entries_helper -type f
+}
+
+_servers
