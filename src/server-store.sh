@@ -131,6 +131,14 @@ cmd_insert(){
 	echo "$server" > $serverfile
 }
 
+cmd_mv(){
+	[[ $# -lt 2 ]] && die "Usage: $PROGRAM old-path new-path"
+	[[ ! -e $PATHSTORE/$1 ]] && die "You cant't mv a non existent server."
+	[[ -e $PATHSTORE/$2 ]] && yesno "An entry already exists for $path. Overwrite it?"
+
+	mv $PATHSTORE/$1 $PATHSTORE/$2
+}
+
 cmd_edit(){
 	[[ $# -ne 1 ]] && die "Usage: $PROGRAM $COMMAND server-name"
 	local path="${1%/}"
@@ -176,6 +184,7 @@ case "$1" in
 	connect|ls|list) shift;		cmd_show_connect "$@" ;;
 	find|search) shift;			cmd_find "$@" ;;
 	insert|add) shift;			cmd_insert "$@" ;;
+	mv) shift;					cmd_mv "$@" ;;
 	edit) shift;				cmd_edit "$@" ;;
 	delete|rm|remove) shift;	cmd_delete "$@" ;;
 	*) COMMAND="connect";		cmd_show_connect "$@" ;;
