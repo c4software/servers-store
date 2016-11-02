@@ -16,6 +16,9 @@ _servers () {
 			insert)
 				_servers_complete_entries_with_subdirs
 				;;
+			mv)
+			_servers_complete_entries_with_subdirs
+			;;
 			rm)
 				_arguments : \
 					"-f[force deletion]" \
@@ -35,6 +38,7 @@ _servers () {
 			"find:Find severs files or directories based on pattern"
 			"connect:Connect or transfert file to server"
 			"insert:Insert a new server"
+			"move:Move a server to another path"
 			"edit:Edit a server with \$EDITOR"
 			"rm:Remove the server"
 		)
@@ -51,7 +55,7 @@ _servers_complete_entries_helper () {
 	local IFS=$'\n'
 	local prefix
 	zstyle -s ":completion:${curcontext}:" prefix prefix || prefix="$HOME/.server-store"
-	_values -C 'Server' ${$(find -L "$prefix" \( -name .git -o -name .gpg-id \) -prune -o $@ -print 2>/dev/null | sed -e "s#${prefix}/\{0,1\}##" -e 's#\.sh##' -e 's#\\#\\\\#' | sort):-""}
+	_values -C 'Server' ${$(find -L "$prefix" \( -name .git -o -name .gpg-id \) -prune -o $@ -print 2>/dev/null | sed -e "s#${prefix}/\{0,1\}##" -e 's#\.DS_Store##' -e 's#\\#\\\\#' | sort):-""}
 }
 
 _servers_complete_entries_with_subdirs () {

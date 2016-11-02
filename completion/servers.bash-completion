@@ -1,7 +1,6 @@
 _servers_complete_entries () {
 	prefix="$HOME/.server-store/"
 	prefix="${prefix%/}/"
-	suffix=".sh"
 	autoexpand=${1:-0}
 
 	local IFS=$'\n'
@@ -37,7 +36,7 @@ _servers_complete_entries () {
 		# append / to directories
 		[[ -d $item ]] && item="$item/"
 
-		item="${item%$suffix}"
+		item="${item}"
 		COMPREPLY+=("${item#$prefix}")
 		if [[ $i -eq 0 ]]; then
 			firstitem=$item
@@ -68,7 +67,7 @@ _servers()
 {
 	COMPREPLY=()
 	local cur="${COMP_WORDS[COMP_CWORD]}"
-	local commands="ls find show insert edit rm help version"
+	local commands="ls find show insert mv move delete remove rm edit rm help version"
 	if [[ $COMP_CWORD -gt 1 ]]; then
 		local lastarg="${COMP_WORDS[$COMP_CWORD-1]}"
 		case "${COMP_WORDS[1]}" in
@@ -79,6 +78,10 @@ _servers()
 				_servers_complete_entries 1
 				;;
 			insert)
+				COMPREPLY+=($(compgen -W "-f --force" -- ${cur}))
+				_servers_complete_entries
+				;;
+			move|mv)
 				COMPREPLY+=($(compgen -W "-f --force" -- ${cur}))
 				_servers_complete_entries
 				;;
