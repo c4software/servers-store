@@ -1,4 +1,10 @@
-PREFIX ?= /usr/local
+PLATEFORM := $(shell uname | cut -d _ -f 1 | tr '[:upper:]' '[:lower:]')
+PREFIX ?= /usr
+
+ifeq ($(PLATEFORM), darwin)
+PREFIX := /usr/local
+endif
+
 BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib
 
@@ -26,7 +32,7 @@ install-common:
 
 install: install-common
 	@install -v -d "$(BINDIR)/"
-	cat src/server-store.sh > "$(BINDIR)/servers"
+	install -m 0755 -v src/server-store.sh "$(BINDIR)/servers"
 	@chmod 0755 "$(BINDIR)/servers"
 
 uninstall:
