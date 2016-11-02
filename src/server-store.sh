@@ -184,7 +184,7 @@ case "$1" in
 	connect|ls|list) shift;		cmd_show_connect "$@" ;;
 	find|search) shift;			cmd_find "$@" ;;
 	insert|add) shift;			cmd_insert "$@" ;;
-	mv) shift;					cmd_mv "$@" ;;
+	mv|move) shift;					cmd_mv "$@" ;;
 	edit) shift;				cmd_edit "$@" ;;
 	delete|rm|remove) shift;	cmd_delete "$@" ;;
 	*) COMMAND="connect";		cmd_show_connect "$@" ;;
