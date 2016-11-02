@@ -69,13 +69,17 @@ cmd_usage() {
 }
 
 cmd_init() {
-	mkdir $PATHSTORE
-	echo "Server store initialized in $PATHSTORE"
+	if [[ -d $PATHSTORE ]]; then
+		die "Server store already initialized."
+	else
+		mkdir $PATHSTORE
+		echo "Server store initialized in $PATHSTORE"
+	fi
 }
 
 cmd_show_connect() {
 	local path="$1"
-	local serverfile="$PATHSTORE/$path.sh"
+	local serverfile="$PATHSTORE/$path"
 	check_sneaky_paths "$path"
 
 	if [[ -f $serverfile ]]; then
@@ -90,7 +94,7 @@ cmd_show_connect() {
 		else
 			echo "${path%\/}"
 		fi
-		tree -C -l --noreport "$PATHSTORE/$path" | tail -n +2 | sed -E 's/\.sh(\x1B\[[0-9]+m)?( ->|$)/\1\2/g' # Remove the sh part of the file, while keeping colors
+		tree -C -l --noreport "$PATHSTORE/$path" | tail -n +2
 	else
 		die "Incorrect server path"
 	fi
@@ -100,7 +104,7 @@ cmd_find() {
 	[[ -z "$@" ]] && die "Usage: $PROGRAM $COMMAND servers-names..."
 	IFS="," eval 'echo "Search Terms: $*"'
 	local terms="*$(printf '%s*|*' "$@")"
-	tree -C -l --noreport -P "${terms%|*}" --prune --matchdirs --ignore-case "$PATHSTORE" | tail -n +2 | sed -E 's/\.sh(\x1B\[[0-9]+m)?( ->|$)/\1\2/g'
+	tree -C -l --noreport -P "${terms%|*}" --prune --matchdirs --ignore-case "$PATHSTORE" | tail -n +2
 }
 
 cmd_insert(){
@@ -115,7 +119,7 @@ cmd_insert(){
 
 	[[ $err -ne 0 || $# -lt 1 ]] && die "Usage: $PROGRAM $COMMAND [--force,-f] server-name"
 	local path="${1%/}"
-	local serverfile="$PATHSTORE/$path.sh"
+	local serverfile="$PATHSTORE/$path"
 	check_sneaky_paths "$path"
 	
 	[[ $force -eq 0 && -e $serverfile ]] && yesno "An entry already exists for $path. Overwrite it?"
@@ -131,7 +135,7 @@ cmd_edit(){
 	[[ $# -ne 1 ]] && die "Usage: $PROGRAM $COMMAND server-name"
 	local path="${1%/}"
 	mkdir -p -v "$PATHSTORE/$(dirname "$path")"
-	local serverfile="$PATHSTORE/$path.sh"
+	local serverfile="$PATHSTORE/$path"
 	check_sneaky_paths "$path"
 
 	${EDITOR:-vim} $serverfile
@@ -152,7 +156,7 @@ cmd_delete(){
 	check_sneaky_paths "$path"
 
 	local serverdir="$PATHSTORE/${path%/}"
-	local serverfile="$PATHSTORE/$path.sh"
+	local serverfile="$PATHSTORE/$path"
 	[[ -f $serverfile && -d $serverdir && $path == */ || ! -f $serverfile ]] && serverfile="$serverdir"
 	[[ -e $serverfile ]] || die "Error: $path is not in the server store."
 
