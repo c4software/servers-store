@@ -7,9 +7,16 @@ I made Servers-store to answer a simple problem store all of my servers connecti
 
 ## Installation
 
-OS X & Linux:
+Linux:
 
 ```sh
+make install
+```
+
+OSX:
+
+```sh
+brew install gnu-getopt
 make install
 ```
 
