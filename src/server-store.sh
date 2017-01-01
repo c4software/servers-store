@@ -121,7 +121,7 @@ cmd_insert(){
 	local path="${1%/}"
 	local serverfile="$PATHSTORE/$path"
 	check_sneaky_paths "$path"
-	
+
 	[[ $force -eq 0 && -e $serverfile ]] && yesno "An entry already exists for $path. Overwrite it?"
 
 	mkdir -p -v "$PATHSTORE/$(dirname "$path")"
