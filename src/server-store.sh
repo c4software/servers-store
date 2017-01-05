@@ -5,6 +5,8 @@ SSH="ssh"
 SCP="scp"
 set -o pipefail
 
+export GIT_DIR="$PATHSTORE/.git"
+
 # Manage plateform specific
 PLATEFORM=$(uname | cut -d _ -f 1 | tr '[:upper:]' '[:lower:]')
 case $PLATEFORM in
@@ -15,6 +17,29 @@ case $PLATEFORM in
 		GETOPT="getopt"
 		;;
 esac
+
+git_add_file() {
+	[[ -d $GIT_DIR ]] || return
+	cd $PATHSTORE
+	git add "$1" || return
+	[[ -n $(git status --porcelain "$1") ]] || return
+	git_commit "$2"
+}
+git_commit() {
+	[[ -d $GIT_DIR ]] || return
+	git commit -m "$1"
+}
+cmd_git() {
+	cd $PATHSTORE
+	if [[ $1 == "init" ]]; then
+		git "$@" || exit 1
+		git_add_file "$PATHSTORE" "Add current known servers"
+	elif [[ -d $GIT_DIR ]]; then
+		git "$@"
+	else
+		die "Error: The git folder of your password store is not initialized. Try \"$PROGRAM git init\"."
+	fi
+}
 
 yesno() {
 	[[ -t 0 ]] || return 0
@@ -60,6 +85,9 @@ cmd_usage() {
 	        Insert or edit a server with ${EDITOR:-vi}.
 	    $PROGRAM rm [--recursive,-r] [--force,-f] server
 	        Remove existing server or directory, optionally forcefully.
+			$PROGRAM git git-command-args...
+	        If the server store is a git repository, execute a git command
+	        specified by git-command-args.
 	    $PROGRAM help
 	        Show this text.
 	    $PROGRAM version
@@ -129,6 +157,7 @@ cmd_insert(){
 	local server
 	read -r -p "Enter « login@server » for $path: " -e server
 	echo "$server" > $serverfile
+	git_add_file "$serverfile" "Add the given server to $serverfile"
 }
 
 cmd_mv(){
@@ -137,6 +166,7 @@ cmd_mv(){
 	[[ -e $PATHSTORE/$2 ]] && yesno "An entry already exists for $path. Overwrite it?"
 
 	mv $PATHSTORE/$1 $PATHSTORE/$2
+	git_add_file "$PATHSTORE/$2" "Move $PATHSTORE/$1 to $PATHSTORE/$2"
 }
 
 cmd_edit(){
@@ -147,6 +177,7 @@ cmd_edit(){
 	check_sneaky_paths "$path"
 
 	${EDITOR:-vim} $serverfile
+	git_add_file "$serverfile" "Edit $serverfile"
 }
 
 cmd_delete(){
@@ -172,6 +203,8 @@ cmd_delete(){
 
 	rm $recursive -f -v "$serverfile"
 	rmdir -p "${serverfile%/*}" 2>/dev/null
+
+	git_add_file "$PATHSTORE" "Remove $serverfile"
 }
 
 PROGRAM="${0##*/}"
@@ -187,6 +220,7 @@ case "$1" in
 	mv|move) shift;					cmd_mv "$@" ;;
 	edit) shift;				cmd_edit "$@" ;;
 	delete|rm|remove) shift;	cmd_delete "$@" ;;
+	git) shift;			cmd_git "$@" ;;
 	*) COMMAND="connect";		cmd_show_connect "$@" ;;
 esac
 exit 0
